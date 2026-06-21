@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Traffic Impact Predictor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  </head>
+  <body>
+    <main class="page narrow">
+      <header class="site-header">
+        <h1>Traffic Impact Predictor</h1>
+        <p>Enter the incident context. Pick a point on the map or type coordinates manually.</p>
+        {% if not model_status.loaded %}
+          <div class="notice error">Model not loaded: {{ model_status.error }}</div>
+        {% endif %}
+      </header>
+
+      <form id="prediction-form" method="post" action="/predict" class="panel">
+        <fieldset>
+          <legend>Location</legend>
+          <div id="map" class="map"></div>
+          <div class="grid two">
+            <label>Latitude
+              <input id="latitude" name="latitude" type="number" step="any" value="12.9716" required>
+            </label>
+            <label>Longitude
+              <input id="longitude" name="longitude" type="number" step="any" value="77.5946" required>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Incident</legend>
+          <div class="grid two">
+            <label>Start time
+              <input name="start_datetime" type="datetime-local" value="{{ default_datetime }}" required>
+            </label>
+            <label>Event type
+              <select name="event_type">
+                {% for value in options.event_type %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Priority
+              <select name="priority">
+                {% for value in options.priority %}
+                  <option>{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Event cause
+              <select name="event_cause">
+                {% for value in options.event_cause %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+          <label class="checkbox">
+            <input name="requires_road_closure" type="checkbox">
+            Requires road closure
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Road Context</legend>
+          <div class="grid two">
+            <label>Corridor
+              <select name="corridor">
+                <option value="Unknown">Unknown</option>
+                {% for value in options.corridor %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Police station
+              <select name="police_station">
+                <option value="Unknown">Unknown</option>
+                {% for value in options.police_station %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Zone
+              <select name="zone">
+                <option value="Unknown">Unknown</option>
+                {% for value in options.zone %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Junction
+              <select name="junction">
+                <option value="Unknown">Unknown</option>
+                {% for value in options.junction %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Direction
+              <select name="direction">
+                <option value="Unknown">Unknown</option>
+                {% for value in options.direction %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Vehicle type
+              <select name="veh_type">
+                <option value="">None</option>
+                {% for value in options.veh_type %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Cargo material
+              <input name="cargo_material" list="cargo-options" placeholder="optional">
+            </label>
+            <label>Truck age
+              <input name="age_of_truck" type="number" step="any" min="0" placeholder="optional">
+            </label>
+          </div>
+          <label>Breakdown reason
+            <input name="reason_breakdown" list="breakdown-options" placeholder="optional">
+          </label>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit">Predict</button>
+          <a href="/health">Health</a>
+        </div>
+      </form>
+
+      <datalist id="cargo-options">
+        {% for value in options.cargo_material[:80] %}
+          <option value="{{ value }}"></option>
+        {% endfor %}
+      </datalist>
+      <datalist id="breakdown-options">
+        {% for value in options.reason_breakdown[:80] %}
+          <option value="{{ value }}"></option>
+        {% endfor %}
+      </datalist>
+    </main>
+
+    <div id="loading" class="loading hidden">
+      <div class="loading-box">Running prediction...</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', path='/app.js') }}"></script>
+  </body>
+</html>
